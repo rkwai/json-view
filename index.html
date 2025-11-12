@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="JSON View is a blazing fast, client-only formatter that prettifies JSON the moment you paste it."
+    />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <title>JSON View</title>
+  </head>
+  <body>
+    <div id="app">
+      <header class="hero">
+        <div class="hero-text">
+          <p class="eyebrow">No servers. No telemetry. Just JSON.</p>
+          <h1>JSON View</h1>
+          <p class="subtitle">
+            Paste on the left, get beautifully formatted JSON on the right. Everything runs locally and stays lightning fast,
+            even on mobile.
+          </p>
+        </div>
+        <div class="hero-controls">
+          <label class="field">
+            <span>Indent</span>
+            <select data-indent>
+              <option value="2">2 spaces</option>
+              <option value="4">4 spaces</option>
+            </select>
+          </label>
+          <label class="field field--toggle">
+            <span>Dark mode</span>
+            <input type="checkbox" data-theme-toggle aria-label="Toggle dark mode" />
+            <span class="toggle-visual" aria-hidden="true"></span>
+          </label>
+        </div>
+      </header>
+
+      <main class="workspace" aria-label="JSON formatter workspace">
+        <section class="pane pane--input">
+          <div class="pane-header">
+            <div>
+              <p class="pane-title">Raw JSON</p>
+              <p class="pane-help">Focus lands here on load. Paste or drop JSON to format.</p>
+            </div>
+            <button class="ghost" data-clear type="button">Clear</button>
+          </div>
+          <textarea
+            id="json-input"
+            spellcheck="false"
+            aria-label="Raw JSON input"
+            placeholder='Paste {"your": "json"} here'
+          ></textarea>
+        </section>
+
+        <section class="pane pane--output">
+          <div class="pane-header">
+            <div>
+              <p class="pane-title">Formatted JSON</p>
+              <p class="pane-help" data-output-hint>Automatically updates once parsing succeeds.</p>
+            </div>
+            <div class="pane-actions">
+              <button class="ghost" data-copy type="button">Copy</button>
+              <button class="ghost" data-download type="button">Download</button>
+            </div>
+          </div>
+          <textarea
+            id="json-output"
+            readonly
+            aria-label="Formatted JSON output"
+            spellcheck="false"
+          ></textarea>
+        </section>
+      </main>
+
+      <section class="status-bar" aria-live="polite" role="status">
+        <div>
+          <p class="status-text" data-status>Waiting for JSON…</p>
+          <p class="status-subtext" data-metrics></p>
+        </div>
+        <div class="status-actions">
+          <kbd>Cmd/Ctrl + Enter</kbd>
+          <span>Re-run formatter</span>
+        </div>
+      </section>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
