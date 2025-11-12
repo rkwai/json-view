@@ -224,26 +224,67 @@ h1 {
   color: var(--text-subdued);
 }
 
-.editor .ace_scroller {
-  font-family: 'JetBrains Mono', 'SFMono-Regular', 'Roboto Mono', Consolas, monospace;
-  font-size: 0.95rem;
+.editor .ace_scroller,
+.ace_editor,
+.ace_editor * {
+  font-family: "Consolas", "Menlo", "Monaco", "Courier New", monospace !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: normal !important;
   background: transparent;
+}
+
+.ace-github {
+  background: rgb(255, 255, 255) !important;
+  color: rgb(33, 33, 33) !important;
+}
+
+.ace-github .ace_gutter {
+  background: rgb(255, 255, 255) !important;
+  color: rgb(153, 153, 153) !important;
+}
+
+.ace-github .ace_cursor {
+  color: rgb(0, 0, 0) !important;
+}
+
+.ace-github .ace_marker-layer .ace_selection {
+  background: rgb(181, 213, 255) !important;
+}
+
+.ace-github .ace_marker-layer .ace_active-line {
+  background: rgba(0, 0, 0, 0.04) !important;
 }
 
 .ace-github .ace_string,
 .ace-github .ace_string.ace_regexp {
-  color: #0d6b3c !important;
+  color: rgb(0, 128, 0) !important;
 }
 
 .ace-github .ace_constant.ace_numeric {
-  color: #aa1821 !important;
+  color: rgb(196, 26, 22) !important;
 }
 
-.ace-github .ace_key,
+.ace-github .ace_constant.ace_boolean,
+.ace-github .ace_constant.ace_language {
+  color: rgb(255, 153, 0) !important;
+  font-weight: 600;
+}
+
+.ace-github .ace_keyword.ace_operator,
+.ace-github .ace_punctuation {
+  color: rgb(0, 0, 0) !important;
+}
+
 .ace-github .ace_identifier,
 .ace-github .ace_variable,
+.ace-github .ace_key {
+  color: rgb(0, 0, 0) !important;
+  font-weight: 400;
+}
+
 .ace-github .ace_identifier.ace_constant {
-  color: #0b0f1b !important;
+  color: rgb(255, 153, 0) !important;
 }
 
 .editor-hint {
