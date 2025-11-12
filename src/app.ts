@@ -1,4 +1,10 @@
 import { copyText, downloadText } from './components/actions'
+import {
+  createEditor,
+  type EditorOptions,
+  type EditorTheme,
+  type JsonEditor,
+} from './editor/createEditor'
 import { formatJson } from './format/prettyPrint'
 
 interface FormatterState {
@@ -15,15 +21,11 @@ function expectElement<T extends Element>(value: T | null, description: string):
   return value
 }
 
-export function boot(doc: Document = document): void {
-  const input = expectElement(
-    doc.querySelector<HTMLTextAreaElement>('#json-input'),
-    'input textarea',
-  )
-  const output = expectElement(
-    doc.querySelector<HTMLTextAreaElement>('#json-output'),
-    'output textarea',
-  )
+export interface BootOptions {
+  createEditor?: (host: HTMLElement, options?: EditorOptions) => JsonEditor
+}
+
+export function boot(doc: Document = document, options: BootOptions = {}): void {
   const status = expectElement(doc.querySelector<HTMLElement>('[data-status]'), 'status text')
   const metrics = expectElement(
     doc.querySelector<HTMLElement>('[data-metrics]'),
@@ -50,6 +52,19 @@ export function boot(doc: Document = document): void {
     doc.querySelector<HTMLInputElement>('[data-theme-toggle]'),
     'theme toggle',
   )
+  const inputHost = expectElement(
+    doc.querySelector<HTMLElement>('#json-input'),
+    'input editor host',
+  )
+  const outputHost = expectElement(
+    doc.querySelector<HTMLElement>('#json-output'),
+    'output editor host',
+  )
+
+  const editorFactory = options.createEditor ?? createEditor
+  const currentTheme: EditorTheme = themeToggle.checked ? 'dark' : 'light'
+  const inputEditor = editorFactory(inputHost, { readOnly: false, theme: currentTheme })
+  const outputEditor = editorFactory(outputHost, { readOnly: true, theme: currentTheme })
 
   const state: FormatterState = {
     indent: Number.parseInt(indentSelect.value, 10) || 2,
@@ -102,10 +117,10 @@ export function boot(doc: Document = document): void {
 
   function runFormatter(): void {
     clearCopyStatus()
-    const raw = input.value
+    const raw = inputEditor.getValue()
     if (!raw.trim()) {
-      output.value = ''
       state.lastFormatted = ''
+      outputEditor.setValue('')
       setStatus(DEFAULT_STATUS, '')
       setOutputHint('Paste JSON to see formatted output instantly.')
       updateButtons(false)
@@ -116,12 +131,13 @@ export function boot(doc: Document = document): void {
 
     if (result.ok) {
       state.lastFormatted = result.formatted
-      output.value = result.formatted
+      outputEditor.setValue(result.formatted)
       setStatus('JSON formatted successfully', buildMetrics(result.stats.bytes, result.stats.durationMs))
       setOutputHint('Output refreshed automatically.')
       updateButtons(Boolean(result.formatted))
     } else {
       state.lastFormatted = ''
+      outputEditor.setValue('')
       setStatus(result.error, buildMetrics(result.stats.bytes, result.stats.durationMs), true)
       setOutputHint('Fix the JSON above and the output will refresh.')
       updateButtons(false)
@@ -138,48 +154,39 @@ export function boot(doc: Document = document): void {
     if (!file) return
 
     file.text().then((text) => {
-      input.value = text
-      runFormatter()
+      inputEditor.setValue(text)
+      inputEditor.focus()
     })
   }
 
-  function handlePaste(event: ClipboardEvent): void {
-    const text = event.clipboardData?.getData('text')
-    if (!text) return
-    // Allow the paste to complete, then format.
-    requestAnimationFrame(() => {
-      if (input.value === text) {
-        runFormatter()
-      }
-    })
+  function applyTheme(variant: EditorTheme): void {
+    doc.documentElement.dataset.theme = variant
+    inputEditor.setTheme?.(variant)
+    outputEditor.setTheme?.(variant)
   }
 
-  function toggleTheme(enabled: boolean): void {
-    const root = doc.documentElement
-    root.dataset.theme = enabled ? 'dark' : 'light'
-  }
-
-  input.addEventListener('input', runFormatter)
-  input.addEventListener('paste', handlePaste)
-  input.addEventListener('dragover', (event) => event.preventDefault())
-  input.addEventListener('drop', handleDrop)
+  inputHost.addEventListener('dragover', (event) => {
+    event.preventDefault()
+  })
+  inputHost.addEventListener('drop', handleDrop)
 
   clearBtn.addEventListener('click', () => {
     clearCopyStatus()
-    input.value = ''
-    output.value = ''
+    inputEditor.setValue('')
     state.lastFormatted = ''
     setStatus(DEFAULT_STATUS)
     setOutputHint('Paste JSON to see formatted output instantly.')
     updateButtons(false)
-    input.focus()
+    inputEditor.focus()
   })
 
   indentSelect.addEventListener('change', () => {
     state.indent = Number.parseInt(indentSelect.value, 10) || 2
     runFormatter()
-    input.focus()
+    inputEditor.focus()
   })
+
+  inputEditor.onChange(runFormatter)
 
   copyBtn.addEventListener('click', async () => {
     if (!state.lastFormatted) return
@@ -205,14 +212,17 @@ export function boot(doc: Document = document): void {
     }
   })
 
-  themeToggle.addEventListener('change', () => toggleTheme(themeToggle.checked))
-  toggleTheme(themeToggle.checked)
+  themeToggle.addEventListener('change', () => {
+    const variant: EditorTheme = themeToggle.checked ? 'dark' : 'light'
+    applyTheme(variant)
+  })
+  applyTheme(currentTheme)
 
   setStatus(DEFAULT_STATUS)
   setOutputHint('Paste JSON to see formatted output instantly.')
   updateButtons(false)
 
   requestAnimationFrame(() => {
-    input.focus()
+    inputEditor.focus()
   })
 }

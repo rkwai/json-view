@@ -46,12 +46,16 @@
             </div>
             <button class="ghost" data-clear type="button">Clear</button>
           </div>
-          <textarea
-            id="json-input"
-            spellcheck="false"
-            aria-label="Raw JSON input"
-            placeholder='Paste {"your": "json"} here'
-          ></textarea>
+          <div class="editor-shell" aria-live="off">
+            <div
+              id="json-input"
+              class="editor"
+              data-editor="input"
+              role="textbox"
+              aria-label="Raw JSON input"
+            ></div>
+            <p class="editor-hint">Paste or drop JSON anywhere in this pane.</p>
+          </div>
         </section>
 
         <section class="pane pane--output">
@@ -65,12 +69,17 @@
               <button class="ghost" data-download type="button">Download</button>
             </div>
           </div>
-          <textarea
-            id="json-output"
-            readonly
-            aria-label="Formatted JSON output"
-            spellcheck="false"
-          ></textarea>
+          <div class="editor-shell" aria-live="polite">
+            <div
+              id="json-output"
+              class="editor"
+              data-editor="output"
+              role="textbox"
+              aria-label="Formatted JSON output"
+              aria-readonly="true"
+            ></div>
+            <p class="editor-hint">Updated instantly with syntax highlighting.</p>
+          </div>
         </section>
       </main>
 

@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-The repository stays minimal: runtime code in `src/`, static files in `public/`, and mirrored specs in `tests/`. `src/main.ts` initializes the page, `src/components/` contains UI elements (dual panes, toolbar, status bar), and `src/format/` holds pure helpers like `prettyPrint.ts`. Keep modules independent and export explicit functions so workers and the main thread can share them without side effects.
+The repository stays minimal: runtime code in `src/`, static files in `public/`, and mirrored specs in `tests/`. `src/main.ts` boots the app, `src/components/` contains UI helpers (status, clipboard), `src/format/` holds pure utilities such as `prettyPrint.ts`, and `src/editor/` wraps Ace configuration + worker URLs. Keep modules independent and export explicit functions so workers and the main thread can share them without side effects.
 
 ## Build, Test, and Development Commands
 Install dependencies with `npm install`, then rely on three core scripts: `npm run dev` (Vite dev server with instant reload), `npm run build` (production bundle under `dist/`), and `npm run preview` (serve the built assets exactly how they will ship). Guard every change with `npm run test` plus `npm run lint && npm run format`; these commands finish in seconds, so they should run before every push or PR.

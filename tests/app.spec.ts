@@ -1,4 +1,38 @@
-import { describe, expect, it, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+const editors = new Map<
+  string,
+  {
+    getValue: () => string
+    setValue: (value: string) => void
+    focus: () => void
+    onChange: (cb: () => void) => void
+    setTheme: ReturnType<typeof vi.fn>
+  }
+>()
+
+vi.mock('../src/editor/createEditor', () => {
+  return {
+    createEditor: (element: HTMLElement) => {
+      const listeners = new Set<() => void>()
+      let value = ''
+      const editor = {
+        getValue: () => value,
+        setValue: (next: string) => {
+          value = next
+          listeners.forEach((listener) => listener())
+        },
+        focus: vi.fn(),
+        onChange: (listener: () => void) => {
+          listeners.add(listener)
+        },
+        setTheme: vi.fn(),
+      }
+      editors.set(element.id, editor)
+      return editor
+    },
+  }
+})
 
 import { boot } from '../src/app'
 
@@ -16,22 +50,18 @@ function renderDom(): void {
           <input type="checkbox" data-theme-toggle />
         </label>
       </header>
-      <main>
-        <section>
-          <button data-clear type="button">Clear</button>
-          <textarea id="json-input"></textarea>
-        </section>
-        <section>
-          <button data-copy type="button">Copy</button>
-          <button data-download type="button">Download</button>
-          <p data-output-hint></p>
-          <textarea id="json-output" readonly></textarea>
-        </section>
-      </main>
       <section>
-        <p data-status></p>
-        <p data-metrics></p>
+        <button data-clear type="button">Clear</button>
+        <div id="json-input" data-editor="input"></div>
       </section>
+      <section>
+        <button data-copy type="button">Copy</button>
+        <button data-download type="button">Download</button>
+        <p data-output-hint></p>
+        <div id="json-output" data-editor="output"></div>
+      </section>
+      <p data-status></p>
+      <p data-metrics></p>
     </div>
   `
 }
@@ -41,46 +71,54 @@ function mount() {
   boot(document)
 }
 
+function setInputValue(value: string) {
+  const editor = editors.get('json-input')
+  if (!editor) {
+    throw new Error('Input editor not initialized')
+  }
+  editor.setValue(value)
+}
+
+function getOutputValue(): string {
+  const editor = editors.get('json-output')
+  if (!editor) {
+    throw new Error('Output editor not initialized')
+  }
+  return editor.getValue()
+}
+
 describe('JSON View app', () => {
   beforeEach(() => {
+    editors.clear()
     mount()
   })
 
-  it('formats valid JSON and writes it to the output textarea', () => {
-    const input = document.querySelector<HTMLTextAreaElement>('#json-input')!
-    const output = document.querySelector<HTMLTextAreaElement>('#json-output')!
+  it('formats valid JSON and writes it to the output editor', () => {
     const copyButton = document.querySelector<HTMLButtonElement>('[data-copy]')!
 
-    input.value = '{"foo":"bar"}'
-    input.dispatchEvent(new Event('input'))
+    setInputValue('{"foo":"bar"}')
 
-    expect(output.value).toBe('{\n  "foo": "bar"\n}')
+    expect(getOutputValue()).toBe('{\n  "foo": "bar"\n}')
     expect(copyButton.disabled).toBe(false)
   })
 
   it('surfaces parse errors without crashing', () => {
-    const input = document.querySelector<HTMLTextAreaElement>('#json-input')!
-    const output = document.querySelector<HTMLTextAreaElement>('#json-output')!
     const status = document.querySelector<HTMLElement>('[data-status]')!
 
-    input.value = '{"foo":}'
-    input.dispatchEvent(new Event('input'))
+    setInputValue('{"foo":}')
 
-    expect(output.value).toBe('')
+    expect(getOutputValue()).toBe('')
     expect(status.dataset.state).toBe('error')
   })
 
   it('re-runs formatting when the indent changes', () => {
-    const input = document.querySelector<HTMLTextAreaElement>('#json-input')!
-    const output = document.querySelector<HTMLTextAreaElement>('#json-output')!
     const indent = document.querySelector<HTMLSelectElement>('select[data-indent]')!
 
-    input.value = '{"foo":{"deep":true}}'
-    input.dispatchEvent(new Event('input'))
+    setInputValue('{"foo":{"deep":true}}')
 
     indent.value = '4'
     indent.dispatchEvent(new Event('change'))
 
-    expect(output.value).toContain('    "deep"')
+    expect(getOutputValue()).toContain('    "deep"')
   })
 })

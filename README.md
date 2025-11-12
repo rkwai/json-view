@@ -8,13 +8,13 @@ JSON View is an ultra-lightweight, client-only JSON formatter built to open inst
 - **Mobile parity:** Below 768 px the panes stack vertically, controls grow to thumb-friendly targets, and fonts adjust for readability without horizontal scrolling.
 
 ## Experience Blueprint
-1. Left pane (`#json-input`) accepts raw/unformatted JSON and supports `Cmd/Ctrl+Enter` to re-run formatting.
-2. Right pane (`#json-output`) is read-only, shows formatted JSON, and exposes quick-copy + download buttons.
+1. Left pane (`#json-input`) runs Ace Editor in JSON mode with vim-like keyboard shortcuts and `Cmd/Ctrl+Enter` to re-run formatting.
+2. Right pane (`#json-output`) is a read-only Ace instance that mirrors formatting output and exposes quick-copy + download buttons.
 3. A slim status bar surfaces validation errors, byte length, and formatting duration (<5 ms target).
 4. Optional settings drawer lets users toggle indentation (2/4 spaces), collapse levels, and dark/light theme.
 
 ## Technical Approach
-- **Stack:** Plain TypeScript + Vite for bundling, with vanilla web components for editors. Monaco or CodeMirror stay optional to keep bundle size under 30 kB; default editor uses native `<textarea>`.
+- **Stack:** Plain TypeScript + Vite for bundling, with embedded Ace Editor instances for authoring/viewing JSON (preconfigured with theme + worker URLs). No runtime frameworks or server APIs.
 - **Parsing:** `JSON.parse` guarded by `try/catch`; errors hydrate the status bar without blocking input. Formatting relies on `JSON.stringify(value, null, indent)` with streaming chunk updates for large payloads.
 - **Performance tricks:** Use `requestIdleCallback` to pre-compute syntax colors, `ResizeObserver` to keep panes balanced, and avoid re-parsing when users tweak settings that do not touch the source.
 
